@@ -17,18 +17,11 @@ configure.wrf*
 *.backup
 *.f90
 
-*.o
-*.a
-*.mod
-*.f90
-*.exe
 Registry_tmp.*
-configure.wrf*
 *.log
 in_use_for_config_*.inc
 Registry/Registry*
 namelist.input.backup.*
-
 
 *.patch
 *.orig
@@ -37,5 +30,3 @@ namelist.input.backup.*
 *~
 \#*\#
 *.stackdump
-
-test/*/*
