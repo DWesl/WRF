@@ -11,7 +11,7 @@ jobs:
 
     runs-on: windows-latest
     env:
-      SHELLOPTS: igncr pipefail
+      SHELLOPTS: igncr:pipefail
       CYGWIN_NOWINPATH: 1
       CHERE_INVOKING: 1
       NETCDF: /usr
@@ -35,9 +35,7 @@ jobs:
     - name: configure
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
       run: |
-        cat <<EOF
-        1
-        EOF | ./configure
+        echo $'1\n1' | ./configure
 
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
