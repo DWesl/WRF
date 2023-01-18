@@ -30,7 +30,7 @@ jobs:
           gcc-core gcc-fortran libnetcdf-fortran-devel
           openmpi libopenmpi-devel
           libjasper-devel
-          perl perl_base tcsh
+          perl perl_base tcsh m4
 
     - name: configure
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
