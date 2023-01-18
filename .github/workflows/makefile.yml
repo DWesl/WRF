@@ -1,0 +1,44 @@
+name: Check Cygwin Compile
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    env:
+      SHELLOPTS: igncr pipefail
+      CYGWIN_NOWINPATH: 1
+      CHERE_INVOKING: 1
+      NETCDF: /usr
+      NETCDF4: 1
+      HDF5: /usr
+
+    steps:
+    - name: Line-ending normalization
+      run: git config --global core.autocrlf input
+
+    - uses: actions/checkout@v3
+
+    - uses: cygwin/cygwin-install-action@v3
+      with:
+        packages: >-
+          gcc-core gcc-fortran libnetcdf-fortran-devel
+          openmpi libopenmpi-devel
+          libjasper-devel
+          perl tcsh
+
+    - name: configure
+      shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
+      run: |
+        cat <<EOF
+        1
+        EOF | ./configure
+
+    - name: Compile
+      shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
+      run: ./compile
