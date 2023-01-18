@@ -27,10 +27,12 @@ jobs:
     - uses: cygwin/cygwin-install-action@v3
       with:
         packages: >-
-          gcc-core gcc-fortran libnetcdf-fortran-devel
+          gcc-core gcc-fortran
+          libnetcdf-fortran-devel libnetcdf-devel
           openmpi libopenmpi-devel
           libjasper-devel
           perl perl_base tcsh m4
+          libtirpc-devel
 
     - name: configure
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
