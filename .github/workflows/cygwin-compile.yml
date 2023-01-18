@@ -16,7 +16,7 @@ jobs:
       CHERE_INVOKING: 1
       NETCDF: /usr
       NETCDF4: 1
-      HDF5: /usr
+      WRFIO_NCD_NO_LARGE_FILE_SUPPORT: 0
 
     steps:
     - name: Line-ending normalization
@@ -36,8 +36,13 @@ jobs:
 
     - name: configure
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
+      # Options:
+      # 1 serial 2 smpar 3 dmpar 4 dm+sm
+      # Nesting? 0 none 1 basic 2 preset move 3 vortex-following
       run: |
-        echo $'1\n1' | /bin/dash -x ./configure
+        echo $'1\n1' | /bin/dash -x ./configure arw
+        cat tools/nc4_test.log
+        test -f configure.wrf
 
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
