@@ -28,8 +28,8 @@ jobs:
       with:
         packages: >-
           gcc-core gcc-fortran
-          libnetcdf-fortran-devel libnetcdf-devel
-          openmpi libopenmpi-devel
+          libnetcdf-fortran-devel libnetcdf-devel zlib-devel
+          openmpi libopenmpi-devel libhwloc-devel libevent-devel
           libjasper-devel
           perl perl_base tcsh m4
           libtirpc-devel
