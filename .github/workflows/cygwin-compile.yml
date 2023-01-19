@@ -31,7 +31,8 @@ jobs:
           libnetcdf-fortran-devel libnetcdf-devel zlib-devel
           openmpi libopenmpi-devel libhwloc-devel libevent-devel
           libjasper-devel
-          perl perl_base tcsh m4
+          perl perl_base tcsh m4 make sed
+          gawk tar gzip coreutils which file grep
           libtirpc-devel
 
     - name: configure
@@ -46,4 +47,7 @@ jobs:
 
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
-      run: ./compile em_real
+      run: |
+        ./compile em_real
+        ls main/*.exe
+        ls test/em_real/real.exe
