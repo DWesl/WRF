@@ -28,7 +28,7 @@ jobs:
       with:
         packages: >-
           gcc-core gcc-fortran
-          libnetcdf-fortran-devel libnetcdf-devel zlib-devel
+          libnetcdf-fortran-devel libnetcdf-devel libhdf5-devel zlib-devel
           openmpi libopenmpi-devel libhwloc-devel libevent-devel
           libjasper-devel
           perl perl_base tcsh m4 make sed
