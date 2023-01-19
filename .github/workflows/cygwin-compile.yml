@@ -40,10 +40,10 @@ jobs:
       # 1 serial 2 smpar 3 dmpar 4 dm+sm
       # Nesting? 0 none 1 basic 2 preset move 3 vortex-following
       run: |
-        echo $'1\n1' | /bin/dash -x ./configure arw
+        echo $'1\n1' | /bin/dash ./configure arw
         if [ -f tools/nc4_test.log ] ; then cat tools/nc4_test.log; fi
         test -f configure.wrf
 
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
-      run: ./compile
+      run: ./compile em_real
