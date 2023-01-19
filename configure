@@ -196,6 +196,10 @@ if [ -n "$NETCDFPAR" ] ; then
   export NETCDF
   export NETCDF4
   export USENETCDFPAR
+else
+  # Makefile assumes USENETCDFPAR is set
+  USENETCDFPAR="0"
+  export USENETCDFPAR
 fi
 
 if  test -z "$NETCDF"  ; then
