@@ -41,7 +41,7 @@ jobs:
       # Nesting? 0 none 1 basic 2 preset move 3 vortex-following
       run: |
         echo $'1\n1' | /bin/dash -x ./configure arw
-        cat tools/nc4_test.log
+        if [ -f tools/nc4_test.log ] ; then cat tools/nc4_test.log; fi
         test -f configure.wrf
 
     - name: Compile
