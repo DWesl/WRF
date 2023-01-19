@@ -18,9 +18,10 @@ jobs:
       NETCDF4: 1
       WRFIO_NCD_NO_LARGE_FILE_SUPPORT: 0
 
-    matrix:
-      parallelization: [1, 2, 3]
-      nesting: [0, 1]
+    strategy:
+      matrix:
+        parallelization: [1, 2, 3]
+        nesting: [0, 1]
 
     steps:
     - name: Line-ending normalization
