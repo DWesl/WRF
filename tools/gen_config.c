@@ -14,12 +14,16 @@ int
 gen_namelist_defines ( char * dirname , int sw_dimension )
 {
   FILE * fp ;
-  char  fname[NAMELEN] ;
+  char  fname[NAMELEN + 4] ;
   char  fn[NAMELEN] ;
   node_t *p ;
   
   sprintf( fn, "namelist_defines%s.inc", sw_dimension?"":"2" ) ;
-  if ( strlen(dirname) > 0 ) { sprintf(fname,"%s/%s",dirname,fn) ; }
+  if ( strlen(dirname) > 0 ) {
+    sprintf(fname,"%s/%s",dirname,fn) ;
+  } else {
+    sprintf(fname, "%s", fn) ;
+  }
   if ((fp = fopen( fname , "w" )) == NULL ) return(1) ;
   print_warning(fp,fname) ;
 
@@ -55,7 +59,11 @@ gen_namelist_defaults ( char * dirname )
   char  *fn = "namelist_defaults.inc" ;
   node_t *p ;
 
-  if ( strlen(dirname) > 0 ) { sprintf(fname,"%s/%s",dirname,fn) ; }
+  if ( strlen(dirname) > 0 ) {
+    sprintf(fname,"%s/%s",dirname,fn) ;
+  } else {
+    sprintf(fname, "%s", fn) ;
+  }
   if ((fp = fopen( fname , "w" )) == NULL ) return(1) ;
   print_warning(fp,fname) ;
 
@@ -129,7 +137,11 @@ gen_namelist_script ( char * dirname )
   char  howset1[NAMELEN] ;
   char  howset2[NAMELEN] ;
 
-  if ( strlen(dirname) > 0 ) { sprintf(fname,"%s/%s",dirname,fn) ; }
+  if ( strlen(dirname) > 0 ) {
+    sprintf(fname,"%s/%s",dirname,fn) ;
+  } else {
+    sprintf(fname, "%s", fn) ;
+  }
   if ((fp = fopen( fname , "w" )) == NULL ) return(1) ;
 
   sym_forget() ;
