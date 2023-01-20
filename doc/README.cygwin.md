@@ -19,6 +19,8 @@
 		- libnetcdf-fortran-devel
 		- openmpi (MPI for dmpar)
 		- libopenmpi-devel (MPI for dmpar)
+		- libhwloc-devel (needed by MPI)
+		- libevent-devel (needed by MPI)
 		- libjasper-devel (GRIB)
 		- perl
 		- tcsh
