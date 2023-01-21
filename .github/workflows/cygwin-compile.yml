@@ -17,10 +17,13 @@ jobs:
       NETCDF: /usr
       NETCDF4: 1
       WRFIO_NCD_NO_LARGE_FILE_SUPPORT: 0
+      WRF_CHEM: 1
+      FLUX_LIB_DIR: /usr/lib
+      YACC: "/usr/bin/yacc -d"
 
     strategy:
       matrix:
-        parallelization: [1, 2, 3]
+        parallelization: [1, 3]
         nesting: [0, 1]
 
     steps:
@@ -39,6 +42,7 @@ jobs:
           perl perl_base tcsh m4 make sed
           gawk tar gzip coreutils which file grep
           libtirpc-devel
+          flex bison
 
     - name: configure
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
@@ -49,6 +53,7 @@ jobs:
         echo ${{ matrix.parallelization }}$'\n'${{ matrix.nesting }} | /bin/dash ./configure arw
         if [ -f tools/nc4_test.log ] ; then cat tools/nc4_test.log; fi
         test -f configure.wrf
+        grep WRF_CHEM configure.wrf
 
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
