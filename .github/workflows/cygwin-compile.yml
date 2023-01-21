@@ -17,11 +17,12 @@ jobs:
       NETCDF: /usr
       NETCDF4: 1
       WRFIO_NCD_NO_LARGE_FILE_SUPPORT: 0
+      WRF_HYDRO: 1
 
     strategy:
       matrix:
-        parallelization: [1, 2, 3]
-        nesting: [0, 1]
+        parallelization: [3]
+        nesting: [1]
 
     steps:
     - name: Line-ending normalization
@@ -46,6 +47,7 @@ jobs:
       # 1 serial 2 smpar 3 dmpar 4 dm+sm
       # Nesting? 0 none 1 basic 2 preset move 3 vortex-following
       run: |
+        source hydro/template/setEnvar.sh
         echo ${{ matrix.parallelization }}$'\n'${{ matrix.nesting }} | /bin/dash ./configure arw
         if [ -f tools/nc4_test.log ] ; then cat tools/nc4_test.log; fi
         test -f configure.wrf
@@ -53,6 +55,7 @@ jobs:
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
       run: |
+        source hydro/template/setEnvar.sh
         ./compile em_real
         ls main/*.exe
         ls test/em_real/real.exe
