@@ -117,7 +117,7 @@ pre_parse( char * dir, FILE * infile, FILE * outfile )
     for ( p = inln ; ( *p == ' ' || *p == '	' ) && *p != '\0' ; p++ ) ;
     if ( !strncmp( p , "include", 7 ) &&  ! ( ifdef_stack_ptr >= 0 && ! ifdef_stack[ifdef_stack_ptr] ) ) {
       FILE *include_fp ;
-      char include_file_name[128] ;
+      char include_file_name[130] ;
       p += 7 ; for ( ; ( *p == ' ' || *p == '	' ) && *p != '\0' ; p++ ) ;
       if ( strlen( p ) > 127 ) { fprintf(stderr,"Registry warning: invalid include file name: %s\n", p ) ; }
       else {
