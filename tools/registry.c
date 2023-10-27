@@ -19,6 +19,8 @@
 #include "data.h"
 #include "sym.h"
 
+#include <spawn.h>
+
 /* SamT: bug fix: main returns int */
 int
 main( int argc, char *argv[] )
@@ -159,47 +161,31 @@ main( int argc, char *argv[] )
       sprintf( fname_wrk,"%s/Registry_irr_diag",dir ) ;
     }
 //  fprintf(stderr,"Registry tmp file = %s\n",fname_wrk);
-    /* we should be able to implement this using posix_spawn */
-    /*
-      #include <spawn.h>
-      extern char **environ;
-      pid_t child_pid;
-      // There doesn't seem to be a way to specify the length, so I'm
-      // assuming it's null-terminated
-      char *command_argv[4] = {"/bin/cp", NULL, NULL, NULL};
-      command_argv[1] = fname_in;
-      command_argv[2] = fname_wrk;
+    extern char **environ;
+    pid_t child_pid;
+    // There doesn't seem to be a way to specify the length, so I'm
+    // assuming it's null-terminated
+    char *command_argv[4] = {"/bin/cp", NULL, NULL, NULL};
+    command_argv[1] = fname_in;
+    command_argv[2] = fname_wrk;
 
-      if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
-        fprintf(stderr, "Could not copy %s to %s\n", fname_in, fname_wrk);
-	exit(2);
-      }
-     */
-    sprintf(command,"/bin/cp \'%s\' \'%s\'\n",fname_in,fname_wrk);
-//  fprintf(stderr,"Command = %s\n",command);
-    if( system( command ) ) {
-      fprintf(stderr,"Could not copy %s to %s\n",fname_in,fname_wrk);
-      exit(2) ;
+    if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
+      fprintf(stderr, "Could not copy %s to %s\n", fname_in, fname_wrk);
+      exit(2);
     }
+//  fprintf(stderr,"Command = %s\n",command);
     if (( fp_tmp = fopen( fname_wrk , "a" )) == NULL )
     {
       fprintf(stderr,"Registry program cannot open %s for appending. Ending.\n", fname_tmp ) ;
       exit(2) ;
     }
     if( !access( "Registry/registry.irr_diag",F_OK ) ) {
-      /*
-	command_argv[0] = "/bin/rm";
-	command_argv[1] = "-f";
-	command_argv[2] = "Registry/registry.irr_diag";
-	if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
-          fprintf(stderr, "Could not remove Registry/registry.irr_diag\n", fname_in, fname_wrk);
-	  exit(2);
-	}
-      */
-      sprintf(command,"/bin/rm -f Registry/registry.irr_diag\n");
-      if( system( command ) ) {
-        fprintf(stderr,"Could not remove Registry/registry.irr_diag\n");
-        exit(2) ;
+      command_argv[0] = "/bin/rm";
+      command_argv[1] = "-f";
+      command_argv[2] = "Registry/registry.irr_diag";
+      if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
+	fprintf(stderr, "Could not remove Registry/registry.irr_diag\n", fname_in, fname_wrk);
+	exit(2);
       }
     }
     {
@@ -304,22 +290,17 @@ cleanup:
      system( command ) ;
    }
    sprintf(command,"del /F /Q %s\n",fname_tmp );
+   return system( command ) ;
 #else
    if( do_irr_diag ) {
-      /*
-	command_argv[0] = "/bin/rm";
-	command_argv[1] = "-f";
-	command_argv[2] = fname_wrk;
-	if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
-          fprintf(stderr, "Could not remove %s\n", fname_wrk);
-	  exit(2);
-	}
-      */
-     sprintf(command,"/bin/rm -f %s\n",fname_wrk );
-     system( command ) ;
+     command_argv[0] = "/bin/rm";
+     command_argv[1] = "-f";
+     command_argv[2] = fname_wrk;
+     if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
+       fprintf(stderr, "Could not remove %s\n", fname_wrk);
+       exit(2);
+     }
    }
-   sprintf(command,"/bin/rm -f %s\n",fname_tmp );
 #endif
-   return system( command ) ;
 }
 
