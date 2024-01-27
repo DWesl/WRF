@@ -1,0 +1,58 @@
+name: Check Cygwin Compile
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    env:
+      SHELLOPTS: igncr:pipefail
+      CYGWIN_NOWINPATH: 1
+      CHERE_INVOKING: 1
+      NETCDF: /usr
+      NETCDF4: 1
+      WRFIO_NCD_NO_LARGE_FILE_SUPPORT: 0
+
+    strategy:
+      matrix:
+        parallelization: [1, 2, 3]
+        nesting: [0, 1]
+
+    steps:
+    - name: Line-ending normalization
+      run: git config --global core.autocrlf input
+
+    - uses: actions/checkout@v3
+
+    - uses: cygwin/cygwin-install-action@v3
+      with:
+        packages: >-
+          gcc-core gcc-fortran
+          libnetcdf-fortran-devel libnetcdf-devel libhdf5-devel zlib-devel
+          openmpi libopenmpi-devel libhwloc-devel libevent-devel
+          libjasper-devel
+          perl perl_base tcsh m4 make sed
+          gawk tar gzip coreutils which file grep
+          libtirpc-devel
+
+    - name: configure
+      shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
+      # Options:
+      # 1 serial 2 smpar 3 dmpar 4 dm+sm
+      # Nesting? 0 none 1 basic 2 preset move 3 vortex-following
+      run: |
+        echo ${{ matrix.parallelization }}$'\n'${{ matrix.nesting }} | /bin/dash ./configure arw
+        if [ -f tools/nc4_test.log ] ; then cat tools/nc4_test.log; fi
+        test -f configure.wrf
+
+    - name: Compile
+      shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
+      run: |
+        ./compile em_real
+        ls main/*.exe
+        ls test/em_real/real.exe
