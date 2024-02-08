@@ -17,11 +17,15 @@ jobs:
       NETCDF: /usr
       NETCDF4: 1
       WRFIO_NCD_NO_LARGE_FILE_SUPPORT: 0
+      WRF_CHEM: ${{ matrix.chemistry }}
+      FLEX_LIB_DIR: /usr/lib
+      YACC: "/usr/bin/yacc -d"
 
     strategy:
       matrix:
         parallelization: [1, 2, 3]
         nesting: [0, 1]
+        chemistry: [0, 1]
 
     steps:
     - name: Line-ending normalization
@@ -34,11 +38,12 @@ jobs:
         packages: >-
           gcc-core gcc-fortran
           libnetcdf-fortran-devel libnetcdf-devel libhdf5-devel zlib-devel
-          ${{ matrix.parallelization >= 3 && 'openmpi libopenmpi-devel libhwloc-devel libevent-devel' }}
+          ${{ matrix.parallelization >= 3 && 'openmpi libopenmpi-devel libhwloc-devel libevent-devel' || '' }}
           libjasper-devel
           perl perl_base tcsh m4 make sed
           gawk tar gzip coreutils which file grep
           libtirpc-devel
+          ${{ matrix.chemistry && 'flex bison' || '' }}
 
     - name: configure
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
