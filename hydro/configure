@@ -96,6 +96,9 @@ if [[ "$theArgument" == "2" ]] || [[ "$theArgument" == "gfort" ]]; then
     cp arc/macros.mpp.gfort macros 
     cp arc/Makefile.mpp Makefile.comm
     echo "Configured: gfort"
+    pwd
+    ls -lh Makefile.comm
+    file Makefile.comm
 fi
 
 if [[ "$theArgument" == "3" ]] || [[ "$theArgument" == "ifort" ]]; then
@@ -178,6 +181,7 @@ if [[ -e macros.tmp ]]; then
     rm -f macros.tmp
     mv macros.a macros
 fi
+test -f Makefile.comm
 
 ## success
 exit 0
