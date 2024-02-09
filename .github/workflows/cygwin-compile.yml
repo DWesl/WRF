@@ -62,6 +62,7 @@ jobs:
         echo ${{ matrix.parallelization }}$'\n'${{ matrix.nesting }} | /bin/dash ./configure arw
         if [ -f tools/nc4_test.log ] ; then cat tools/nc4_test.log; fi
         test -f configure.wrf
+        ${{ matrix.hydrology == 1 && 'if [ ! -f hydro/Makefile.comm ] ; then cd hydro && /bin/dash ./configure gfort; fi' || '' }}
 
     - name: Compile
       shell: 'C:\cygwin\bin\bash.exe -o igncr -eo pipefail {0}'
