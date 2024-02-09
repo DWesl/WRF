@@ -29,10 +29,15 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        parallelization: [1, 2, 3]
+        parallelization: [3, 1, 2]
         nesting: [0, 1]
         chemistry: [0, 1]
         hydrology: [0, 1]
+        exclude:
+          - hydrology: 1
+            parallelization: 1
+          - hydrology: 1
+            parallelization: 2
 
     steps:
     - name: Line-ending normalization
