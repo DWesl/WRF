@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 # include <io.h>
+#endif
+#ifdef _WIN32
 # define rindex(X,Y) strrchr(X,Y)
 # define index(X,Y) strchr(X,Y)
-#else
+#endif
 # include <sys/time.h>
 # include <sys/resource.h>
 # include <unistd.h>
 # include <string.h>
 # include <strings.h>
-#endif
 
 #define DEFINE_GLOBALS
 #include "protos.h"
@@ -18,15 +19,19 @@
 #include "data.h"
 #include "sym.h"
 
+// Helper macro to actually do return checks
+#define EXIT_ON_NONZERO( A ) { int result = A; if ( result != 0 ) { printf( "Error in %s, zero return expected, received %i\n", #A, result ); exit(result); } }
+
 /* SamT: bug fix: main returns int */
 int
-main( int argc, char *argv[], char *env[] )
+main( int argc, char *argv[] )
 {
-  char fname_in[NAMELEN], dir[NAMELEN], fname_tmp[NAMELEN], command[NAMELEN] ;
-  char fname_wrk[NAMELEN] ;
+  char fname_in[NAMELEN] = {'\0'}, dir[NAMELEN] = {'\0'};
+  char fname_tmp[NAMELEN] = {'\0'}, command[2 * (NAMELEN + EXTRA_FOR_DEST_BUFFER)] = {'\0'};
+  char fname_wrk[NAMELEN + EXTRA_FOR_DEST_BUFFER] = {'\0'};
   FILE * fp_in, *fp_tmp ;
-  char * thisprog  ;
-  char *env_val ;
+  char * thisprog = "";
+  char *env_val = "";
   int mypid ;
   int do_irr_diag ;
 #ifndef _WIN32
@@ -34,7 +39,7 @@ main( int argc, char *argv[], char *env[] )
 #endif
 
   mypid = (int) getpid() ;
-  strcpy( thiscom, argv[0] ) ;
+  strncpy( thiscom, argv[0], 4 * NAMELEN - 1) ;
   argv++ ;
 
   sw_deref_kludge           = 0 ;
@@ -51,6 +56,8 @@ main( int argc, char *argv[], char *env[] )
                                      other data streams are written to file per process */
   sw_new_bdys              = 0 ;
   sw_unidir_shift_halo     = 0 ;
+  sw_chem                  = 0;
+  sw_kpp                   = 0;
 
   strcpy( fname_in , "" ) ;
 
@@ -124,6 +131,12 @@ main( int argc, char *argv[], char *env[] )
         fprintf(stderr,"Usage: %s [-DDEREF_KLUDGE] [-DDM_PARALLEL] [-DDISTRIB_IO_LAYER] [-DDM_SERIAL_IN_ONLY] [-DD3VAR_IRY_KLUDGE] registryfile\n",thisprog) ;
         exit(1) ;
       }
+      if (!strcmp(*argv,"-DWRF_CHEM")) {
+        sw_chem = 1 ;
+      }
+      if (!strcmp(*argv,"-DWRF_KPP")) {
+        sw_kpp = 1 ;
+      }
     }
     else  /* consider it an input file */
     {
@@ -132,19 +145,17 @@ main( int argc, char *argv[], char *env[] )
     argv++ ;
   }
 
-  gen_io_boilerplate() ;  /* 20091213 jm.  Generate the io_boilerplate_temporary.inc file */
+  EXIT_ON_NONZERO( gen_io_boilerplate() );  /* 20091213 jm.  Generate the io_boilerplate_temporary.inc file */
 
-  init_parser() ;
-  init_type_table() ;
-  init_dim_table() ;
+  EXIT_ON_NONZERO( init_parser() );
+  EXIT_ON_NONZERO( init_type_table() );
+  EXIT_ON_NONZERO( init_dim_table() );
 //
 //  possible IRR diagnostcis?
 //
   do_irr_diag = 0;
-  env_val = getenv( "WRF_CHEM" );
-  if( env_val != NULL && !strncmp( env_val, "1", 1 ) ) {
-    env_val = getenv( "WRF_KPP" );
-    if( env_val != NULL && !strncmp( env_val, "1", 1 ) ) do_irr_diag = 1; 
+  if( sw_chem == 1 ) {
+    if( sw_kpp == 1 ) do_irr_diag = 1; 
   }
   if( do_irr_diag ) {
     if( access( fname_in,F_OK ) ) {
@@ -157,7 +168,8 @@ main( int argc, char *argv[], char *env[] )
       sprintf( fname_wrk,"%s/Registry_irr_diag",dir ) ;
     }
 //  fprintf(stderr,"Registry tmp file = %s\n",fname_wrk);
-    sprintf(command,"/bin/cp %s %s\n",fname_in,fname_wrk);
+    /* we should be able to implement this using posix_spawn */
+    sprintf(command,"/bin/cp \'%s\' \'%s\'\n",fname_in,fname_wrk);
 //  fprintf(stderr,"Command = %s\n",command);
     if( system( command ) ) {
       fprintf(stderr,"Could not copy %s to %s\n",fname_in,fname_wrk);
@@ -169,6 +181,15 @@ main( int argc, char *argv[], char *env[] )
       exit(2) ;
     }
     if( !access( "Registry/registry.irr_diag",F_OK ) ) {
+      /*
+	command_argv[0] = "/bin/rm";
+	command_argv[1] = "-f";
+	command_argv[2] = "Registry/registry.irr_diag";
+	if (posix_spawn(&child_pid, command_argv[0], NULL, NULL, command_argv, environ)) {
+          fprintf(stderr, "Could not remove Registry/registry.irr_diag\n", fname_in, fname_wrk);
+	  exit(2);
+	}
+      */
       sprintf(command,"/bin/rm -f Registry/registry.irr_diag\n");
       if( system( command ) ) {
         fprintf(stderr,"Could not remove Registry/registry.irr_diag\n");
@@ -230,45 +251,45 @@ main( int argc, char *argv[], char *env[] )
   }
 
 
-  reg_parse(fp_tmp) ;
+  EXIT_ON_NONZERO( reg_parse(fp_tmp) );
 
   fclose(fp_tmp) ;
 
-  check_dimspecs() ;
+  check_dimspecs();
 
-  gen_state_struct( "inc" ) ;
-  gen_state_subtypes( "inc" ) ;
-  gen_alloc( "inc" ) ;
+  EXIT_ON_NONZERO( gen_state_struct( "inc" ) );
+  EXIT_ON_NONZERO( gen_state_subtypes( "inc" ) );
+  EXIT_ON_NONZERO( gen_alloc( "inc" ) );
   /* gen_alloc_count( "inc" ) ; */
-  gen_dealloc( "inc" ) ;
-  gen_scalar_indices( "inc" ) ;
-  gen_module_state_description( "frame" ) ;
-  gen_actual_args( "inc" ) ;
-  gen_actual_args_new( "inc" ) ;
-  gen_dummy_args( "inc" ) ;
-  gen_dummy_args_new( "inc" ) ;
-  gen_dummy_decls( "inc" ) ;
-  gen_dummy_decls_new( "inc" ) ;
-  gen_i1_decls( "inc" ) ;
-  gen_namelist_statements("inc") ;
-  gen_namelist_defines ( "inc", 0 ) ;  /* without dimension statements  */
-  gen_namelist_defines ( "inc", 1 ) ;  /* with dimension statements     */
-  gen_namelist_defaults ( "inc" ) ;
-  gen_namelist_script ( "inc" ) ;
-  gen_get_nl_config( "inc" ) ;
-  gen_config_assigns( "inc" ) ;
-  gen_config_reads( "inc" ) ;
-  gen_wrf_io( "inc" ) ;
-  gen_model_data_ord( "inc" ) ;
-  gen_nest_interp( "inc" ) ;
-  gen_nest_v_interp( "inc") ; /*KAL added this for vertical interpolation*/
-  gen_scalar_derefs( "inc" ) ;
-  gen_streams("inc") ;
+  EXIT_ON_NONZERO( gen_dealloc( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_scalar_indices( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_module_state_description( "frame" ) ) ;
+  EXIT_ON_NONZERO( gen_actual_args( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_actual_args_new( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_dummy_args( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_dummy_args_new( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_dummy_decls( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_dummy_decls_new( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_i1_decls( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_namelist_statements("inc") ; )
+  EXIT_ON_NONZERO( gen_namelist_defines ( "inc", 0 ) ) ;  /* without dimension statements  */
+  EXIT_ON_NONZERO( gen_namelist_defines ( "inc", 1 ) ) ;  /* with dimension statements     */
+  EXIT_ON_NONZERO( gen_namelist_defaults ( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_namelist_script ( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_get_nl_config( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_config_assigns( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_config_reads( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_wrf_io( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_model_data_ord( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_nest_interp( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_nest_v_interp( "inc") ; ) /*KAL added this for vertical interpolation*/
+  EXIT_ON_NONZERO( gen_scalar_derefs( "inc" ) ) ;
+  EXIT_ON_NONZERO( gen_streams("inc") ; )
 
 /* this has to happen after gen_nest_interp, which adds halos to the AST */
-  gen_comms( "inc" ) ;    /* this is either package supplied (by copying a */
-                          /* gen_comms.c file into this directory) or a    */
-                          /* stubs routine.                                */
+  EXIT_ON_NONZERO( gen_comms( "inc" ) );    /* this is either package supplied (by copying a */
+                                            /* gen_comms.c file into this directory) or a    */
+                                            /* stubs routine.                                */
 
 cleanup:
 #ifdef _WIN32
@@ -279,10 +300,10 @@ cleanup:
    sprintf(command,"del /F /Q %s\n",fname_tmp );
 #else
    if( do_irr_diag ) {
-     sprintf(command,"/bin/rm -f %s\n",fname_wrk );
+     sprintf(command,"/bin/rm -f \'%s\'\n",fname_wrk );
      system( command ) ;
    }
-   sprintf(command,"/bin/rm -f %s\n",fname_tmp );
+   sprintf(command,"/bin/rm -f \'%s\'\n",fname_tmp );
 #endif
    return system( command ) ;
 }

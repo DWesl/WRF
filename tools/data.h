@@ -103,6 +103,8 @@ EXTERN char sw_commpath[NAMELEN] ;
 EXTERN int sw_new_bdys ;  /* 20070207 JM support decomposed boundary arrays */
 EXTERN int sw_unidir_shift_halo ;  /* 20100210 JM assume that halo to shift is same in both directions and only gen one of them */
 EXTERN int sw_new_with_old_bdys ;  /* 20070207 JM for debugging interim phase, new comms w/ old data structs */
+EXTERN int sw_chem ;
+EXTERN int sw_kpp ;
 
 EXTERN node_t * Type ;
 EXTERN node_t * Dim ;
@@ -119,7 +121,7 @@ EXTERN node_t * Cycles ;
 
 EXTERN node_t Domain ;
 
-EXTERN char t1[NAMELEN], t2[NAMELEN], t3[NAMELEN], t4[NAMELEN], t5[NAMELEN], t6[NAMELEN] ;
+EXTERN char t1[NAMELEN + EXTRA_FOR_DEST_BUFFER], t2[2*(NAMELEN+EXTRA_FOR_DEST_BUFFER)], t3[NAMELEN], t4[NAMELEN + EXTRA_FOR_DEST_BUFFER], t5[NAMELEN], t6[NAMELEN] ;
 EXTERN char thiscom[4*NAMELEN] ;
 EXTERN int  model_order[3] ;
 

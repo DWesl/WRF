@@ -6,7 +6,7 @@ thiscmd=$0
 
 FORTRAN_COMPILER_TIMER=""
 opt_level="-f"
-rword="-r4"
+rword=4
 print_usage=""
 chemistry=""
 wrf_core=""
@@ -22,7 +22,7 @@ while [ $# -ge 1 ]; do
       -help) print_usage="yes" ;;
       -os) shift ; WRF_OS=$1 ;;
       -mach) shift ; WRF_MACH=$1 ;;
-      -r8) rword="-r8" ;;
+      -r8) rword=8 ;;
       -time) shift ; FORTRAN_COMPILER_TIMER=$1 ;;
       chem) WRF_CHEM=1  ;;
       cmaq) WRF_CMAQ=1  ;;
@@ -59,7 +59,7 @@ if `pwd | grep ' ' > /dev/null ` ; then
   echo and this may cause problems for your build.  This can occur, for example, on
   echo Windows systems.  It is strongly recommended that you install WRF and other
   echo related software such as NetCDF in directories whose path names contain no
-  echo white space.  On Win, for example, create and install in a directory under C:.
+  echo white space.  On Windows, for example, create and install in a directory under C:.
   echo '*****************************************************************************'
 fi
 
@@ -219,6 +219,8 @@ if [ -n "$NETCDFPAR" ] ; then
   export NETCDF
   export NETCDF4
   export USENETCDFPAR
+else
+  export USENETCDFPAR=0
 fi
 
 if  test -z "$NETCDF"  ; then
@@ -242,7 +244,7 @@ USENETCDF=""
 if [ -n "$NETCDF" ] ; then
   echo "Will use NETCDF in dir: $NETCDF"
 # Oh UNIDATA, why make it so hard ...
-  if [ -f "$NETCDF/lib/libnetcdff.a" -o -f "$NETCDF/lib/libnetcdff.so" -o -f "$NETCDF/lib/libnetcdff.dll.a" ] ; then
+  if [ -f "$NETCDF/lib/libnetcdff.a" -o -f "$NETCDF/lib/libnetcdff.so" -o -f "${NETCDF}/lib/libnetcdff.dll.a" ] ; then
     USENETCDFF="-lnetcdff"
   else
     USENETCDFF=" "
@@ -266,7 +268,16 @@ fi
 
 # If the user asked for classic netcdf, acquiesce to the request.
 
-if [ ! -f "$NETCDF/bin/nf-config" ] ; then
+if [ "`uname`" = "Linux" -o "`uname -o`" = "Cygwin" ] ; then
+  ans="`whereis nf-config`"
+elif [ "`uname`" = "Darwin" ] ; then
+  ans="`which nf-config`"
+else
+  ans=""
+# echo "Add in your architecture's uname and the command to find executables in the path"
+# exit 1
+fi
+if [ "$ans" = "nf-config:" -o "$ans" = "" ] ; then
     export NETCDF_classic=1
     unset NETCDF4
 else
@@ -527,7 +538,7 @@ if test -n "$wrf_core" ; then
    if [ "$wrf_core" = "DA_CORE" -o \
         "$wrf_core" = "4D_DA_CORE" -o \
         "$wrf_core" = "WRF_PLUS_CORE" ] ; then
-      rword="-r8"
+      rword=8
    fi
 fi
 
@@ -539,7 +550,7 @@ if test -n "$PERL" ; then
           -netcdf=$NETCDF -pnetcdf=$PNETCDF -netcdfpar=$NETCDFPAR -adios2=$ADIOS2 -hdf5=$HDF5 -phdf5=$PHDF5 -os=$os -mach=$mach -ldflags=$ldflags \
           -compileflags=$compileflags -opt_level=$opt_level -USENETCDFF=$USENETCDFF -USENETCDF=$USENETCDF \
           -time=$FORTRAN_COMPILER_TIMER -tfl="$TFL" -cfl="$CFL" -config_line="$config_line" \
-          -wrf_core=$wrf_core -gpfs=$GPFS_PATH -curl=$CURL_PATH -netcdf4_dep_lib="$NETCDF4_DEP_LIB"
+          -wrf_core=$wrf_core -gpfs=$GPFS_PATH -curl=$CURL_PATH -netcdf4_dep_lib="$NETCDF4_DEP_LIB" -rword="$rword"
      if test ! -f configure.wrf ; then
        echo "configure.wrf not created! Exiting configure script..."
        exit 1
@@ -554,13 +565,10 @@ if test -n "$PERL" ; then
      fi
 
      # GNU has a funny way of doing promotion to real*8
-     if [ "$rword" = "-r8" ] ; then
+     if [ $rword -eq 8 ] ; then
        srch=`grep -i "^SFC" configure.wrf | grep -i "gfortran"`
        if [ -n "$srch" ] ; then
-         sed -e '/^PROMOTION/s/#//' \
-          -e '/^RWORDSIZE/s/$(NATIVE_RWORDSIZE)/8/' configure.wrf > configure.wrf.edit
-       else
-         sed -e '/^RWORDSIZE/s/$(NATIVE_RWORDSIZE)/8/' configure.wrf > configure.wrf.edit
+         sed -e '/^PROMOTION/s/#//' configure.wrf > configure.wrf.edit
        fi
        /bin/mv configure.wrf.edit configure.wrf
        sed -e 's/-DBUILD_SBM_FAST=1/-DBUILD_SBM_FAST=0/' configure.wrf > configure.wrf.edit
@@ -657,7 +665,7 @@ fi
 #Checking cross-compiling capability for some particular environment
 #on Linux and Mac box
 
-if [ $os = "Linux" -o $os = "Darwin" ]; then
+if [ $os = "Linux" -o $os = "Darwin" -o $os = "CYGWIN_NT" ]; then
 
   SFC=`grep '^SFC' configure.wrf | awk '{print $3}'`
   SCC=`grep '^SCC' configure.wrf | awk '{print $3}'`
